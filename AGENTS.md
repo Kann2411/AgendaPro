@@ -1,5 +1,17 @@
 This is an Expo/React Native mobile application. Prioritize mobile-first patterns, performance, and cross-platform compatibility.
 
+## Project memory — `memory.md`
+
+`memory.md` (repo root) is the shared log of recent work, fixes, and next steps. Write it in Spanish.
+
+- **At the start of every task**, read `memory.md` to pick up context, what's in progress, and known build/environment gotchas.
+- **When you finish a task** (or stop midway), update it before your final reply:
+  - Add a dated line (`AAAA-MM-DD — …`) at the top of **Hecho** or **Fixes**.
+  - Keep **En curso** and **Próximos pasos** current; remove items that are done.
+  - Record new build/environment lessons under **Notas de build / entorno**.
+- **Hard limit: 100 lines.** If an update would exceed it, condense or drop the oldest entries in **Hecho** and **Fixes** first. Never drop **Contexto rápido** or **Notas de build / entorno**.
+- Keep entries to one or two lines. Detail belongs in code, commits, or `ROADMAP.md` (local, git-ignored), not in the memory.
+
 ## Expo has changed — do not trust your training data
 
 Expo ships breaking changes every SDK release. APIs you remember are likely renamed, moved, or removed. Before writing any code that touches an Expo, EAS, or React Native API:
