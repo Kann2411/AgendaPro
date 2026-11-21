@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useMutation } from "@tanstack/react-query";
+import { useRouter } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { saveBusiness } from "@/data/repositories/business-repository";
 import { seedSuggestedServices } from "@/data/repositories/catalog-repository";
@@ -25,6 +26,7 @@ const localeOptions = LOCALES.map((l) => ({ id: l.id, label: l.label }));
 
 export default function OnboardingScreen() {
   const theme = useTheme();
+  const router = useRouter();
   const [name, setName] = useState("");
   const [businessType, setBusinessType] = useState<BusinessType>("groomer");
   const [tracksPets, setTracksPets] = useState(true);
@@ -64,6 +66,8 @@ export default function OnboardingScreen() {
     },
     onSuccess: async () => {
       await invalidateAll();
+      // Reemplaza el onboarding para que "atrás" no regrese a esta pantalla.
+      router.replace("/(tabs)");
     },
     onError: (error) => Alert.alert("No se pudo guardar", errorText(error)),
   });
