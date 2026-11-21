@@ -4,6 +4,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import * as SystemUI from "expo-system-ui";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { getDb } from "@/data/db/database";
 import { queryClient } from "@/state/query-client";
@@ -39,13 +40,15 @@ function ThemedStack() {
         headerBackTitle: "Atrás",
         headerStyle: { backgroundColor: theme.colors.surface },
         headerTintColor: theme.colors.text,
+        headerShadowVisible: false,
+        animation: "slide_from_right",
         contentStyle: { backgroundColor: theme.colors.background },
       }}
     >
       <Stack.Screen name="index" options={{ headerShown: false }} />
       <Stack.Screen name="onboarding" options={{ title: "Configura tu negocio", headerBackVisible: false }} />
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-      <Stack.Screen name="appointment/[id]" options={{ title: "Cita" }} />
+      <Stack.Screen name="appointment/[id]" options={{ title: "Cita", animation: "slide_from_bottom" }} />
       <Stack.Screen name="client/[id]" options={{ title: "Cliente" }} />
       <Stack.Screen name="notifications" options={{ title: "Notificaciones" }} />
     </Stack>
@@ -54,12 +57,14 @@ function ThemedStack() {
 
 export default function RootLayout() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <SafeAreaProvider>
-        <Providers>
-          <ThemedStack />
-        </Providers>
-      </SafeAreaProvider>
-    </QueryClientProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <QueryClientProvider client={queryClient}>
+        <SafeAreaProvider>
+          <Providers>
+            <ThemedStack />
+          </Providers>
+        </SafeAreaProvider>
+      </QueryClientProvider>
+    </GestureHandlerRootView>
   );
 }

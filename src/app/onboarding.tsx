@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Alert, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
@@ -17,6 +17,9 @@ import { errorText } from "@/domain/format";
 import { invalidateAll } from "@/state/query-client";
 import { Button, Card, Field, Input, PageTitle, SectionTitle } from "@/ui/components";
 import { MultiSelectField, SelectField, ToggleRow, WeekdayPicker } from "@/ui/forms";
+import { haptic } from "@/ui/haptics";
+import { TimeInput } from "@/ui/pickers";
+import { PressableScale } from "@/ui/motion";
 import { useTheme } from "@/ui/theme";
 
 const typeOptions = BUSINESS_TYPES.map((b) => ({ id: b.id, label: b.label }));
@@ -65,6 +68,7 @@ export default function OnboardingScreen() {
       await seedSuggestedServices();
     },
     onSuccess: async () => {
+      haptic.success();
       await invalidateAll();
       // Reemplaza el onboarding para que "atrás" no regrese a esta pantalla.
       router.replace("/(tabs)");
@@ -86,7 +90,7 @@ export default function OnboardingScreen() {
 
       <Card>
         <Field label="Nombre del negocio">
-          <Input value={name} onChangeText={setName} placeholder="Ej. Estudio Canino Luna" />
+          <Input value={name} onChangeText={setName} placeholder="Ej. Estudio Canino Luna" icon="storefront-outline" />
         </Field>
         <SelectField label="Tipo de negocio" value={businessType} options={typeOptions} onChange={setBusinessType} />
         <ToggleRow
@@ -117,13 +121,13 @@ export default function OnboardingScreen() {
       <SectionTitle>Contacto y moneda</SectionTitle>
       <Card>
         <Field label="Teléfono">
-          <Input value={phone} onChangeText={setPhone} placeholder="55 1234 5678" keyboardType="phone-pad" />
+          <Input value={phone} onChangeText={setPhone} placeholder="55 1234 5678" keyboardType="phone-pad" icon="phone-outline" />
         </Field>
         <Field label="Correo">
-          <Input value={email} onChangeText={setEmail} placeholder="hola@minegocio.com" keyboardType="email-address" />
+          <Input value={email} onChangeText={setEmail} placeholder="hola@minegocio.com" keyboardType="email-address" icon="email-outline" />
         </Field>
         <Field label="Dirección">
-          <Input value={address} onChangeText={setAddress} placeholder="Calle, número, colonia" />
+          <Input value={address} onChangeText={setAddress} placeholder="Calle, número, colonia" icon="map-marker-outline" />
         </Field>
         <SelectField label="Moneda" value={currency} options={currencyOptions} onChange={setCurrency} />
         <SelectField label="Idioma y formato" value={locale} options={localeOptions} onChange={setLocale} />
@@ -132,12 +136,8 @@ export default function OnboardingScreen() {
       <SectionTitle>Horario y pagos</SectionTitle>
       <Card>
         <View style={styles.twoColumns}>
-          <Field label="Apertura">
-            <Input value={openTime} onChangeText={setOpenTime} placeholder="09:00" keyboardType="numeric" />
-          </Field>
-          <Field label="Cierre">
-            <Input value={closeTime} onChangeText={setCloseTime} placeholder="18:00" keyboardType="numeric" />
-          </Field>
+          <TimeInput label="Apertura" value={openTime} onChange={setOpenTime} />
+          <TimeInput label="Cierre" value={closeTime} onChange={setCloseTime} />
         </View>
         <WeekdayPicker value={workDays} onChange={setWorkDays} />
         <MultiSelectField
@@ -177,7 +177,7 @@ function PressablePalette({
 }) {
   const theme = useTheme();
   return (
-    <Pressable onPress={onPress} style={({ pressed }) => [styles.paletteItem, pressed && { opacity: 0.7 }]}>
+    <PressableScale onPress={onPress} feedback="select" scaleTo={0.9} style={styles.paletteItem}>
       <View
         style={[
           styles.paletteSwatch,
@@ -187,7 +187,7 @@ function PressablePalette({
         <View style={[styles.paletteSecondary, { backgroundColor: secondary }]} />
       </View>
       <Text style={[styles.paletteName, { color: active ? theme.colors.primary : theme.colors.muted }]}>{name}</Text>
-    </Pressable>
+    </PressableScale>
   );
 }
 

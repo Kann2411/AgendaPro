@@ -7,13 +7,16 @@ import {
   getAppointment,
   saveAppointment,
 } from "@/data/repositories/appointments-repository";
-import { centsToInput, errorText, pesosToCents, statusLabel } from "@/domain/format";
+import { centsToInput, errorText, pesosToCents, statusLabel, statusTone } from "@/domain/format";
 import { deviceTzOffsetMinutes, isoToday, timeNow } from "@/domain/time";
 import { PAYMENT_METHODS, STATUSES, type AppointmentStatus } from "@/domain/types";
 import { useBusiness, useClients, useEmployees, useServices } from "@/state/hooks";
 import { invalidateAll } from "@/state/query-client";
-import { Button, Card, Field, Input, LoadingState, PageTitle, Row, Screen, SectionTitle } from "@/ui/components";
+import { Button, Card, Field, Input, LoadingState, PageTitle, Screen, SectionTitle } from "@/ui/components";
 import { SelectField, ToggleRow } from "@/ui/forms";
+import { haptic } from "@/ui/haptics";
+import { METHOD_ICONS, STATUS_ICONS } from "@/ui/icons";
+import { ChipGroup, DateField, DurationField, TimeField } from "@/ui/pickers";
 
 const MANUAL = "__manual__";
 const NONE = "__none__";
@@ -36,7 +39,7 @@ export default function AppointmentScreen() {
   const [clientPhone, setClientPhone] = useState("");
   const [serviceId, setServiceId] = useState<string>(NONE);
   const [manualService, setManualService] = useState("");
-  const [duration, setDuration] = useState("30");
+  const [duration, setDuration] = useState(30);
   const [price, setPrice] = useState("0");
   const [employeeId, setEmployeeId] = useState<string>(NONE);
   const [petName, setPetName] = useState("");
@@ -62,7 +65,7 @@ export default function AppointmentScreen() {
       setPetName(appt.petName);
       setServiceId(appt.serviceId ?? MANUAL);
       setManualService(appt.serviceName);
-      setDuration(String(appt.durationMin));
+      setDuration(appt.durationMin);
       setPrice(centsToInput(appt.priceCents));
       setEmployeeId(appt.employeeId ?? NONE);
       setLocalDate(appt.localDate);
@@ -82,7 +85,7 @@ export default function AppointmentScreen() {
     setServiceId(value);
     const service = services.find((s) => s.id === value);
     if (service) {
-      setDuration(String(service.durationMin));
+      setDuration(service.durationMin);
       setPrice(centsToInput(service.priceCents));
     }
   }
@@ -113,7 +116,7 @@ export default function AppointmentScreen() {
         employeeId: employeeId === NONE ? null : employeeId,
         localDate,
         localTime,
-        durationMin: Number(duration),
+        durationMin: duration,
         priceCents,
         notes,
         status,
@@ -123,10 +126,14 @@ export default function AppointmentScreen() {
       });
     },
     onSuccess: async () => {
+      haptic.success();
       await invalidateAll();
       router.back();
     },
-    onError: (error) => Alert.alert("No se pudo guardar", errorText(error)),
+    onError: (error) => {
+      haptic.error();
+      Alert.alert("No se pudo guardar", errorText(error));
+    },
   });
 
   const remove = useMutation({
@@ -164,16 +171,16 @@ export default function AppointmentScreen() {
         {clientId === MANUAL || clientId === NONE ? (
           <>
             <Field label="Nombre del cliente">
-              <Input value={manualClient} onChangeText={setManualClient} placeholder="Nombre completo" />
+              <Input value={manualClient} onChangeText={setManualClient} placeholder="Nombre completo" icon="account-outline" />
             </Field>
             <Field label="Teléfono">
-              <Input value={clientPhone} onChangeText={setClientPhone} keyboardType="phone-pad" placeholder="Opcional" />
+              <Input value={clientPhone} onChangeText={setClientPhone} keyboardType="phone-pad" placeholder="Opcional" icon="phone-outline" />
             </Field>
           </>
         ) : null}
         {business?.tracksPets ? (
           <Field label="Mascota">
-            <Input value={petName} onChangeText={setPetName} placeholder="Nombre de la mascota (opcional)" />
+            <Input value={petName} onChangeText={setPetName} placeholder="Nombre de la mascota (opcional)" icon="paw" />
           </Field>
         ) : null}
         <SelectField
@@ -192,29 +199,26 @@ export default function AppointmentScreen() {
         />
         {serviceId === MANUAL || serviceId === NONE ? (
           <Field label="Nombre del servicio">
-            <Input value={manualService} onChangeText={setManualService} placeholder="Ej. Consulta express" />
+            <Input value={manualService} onChangeText={setManualService} placeholder="Ej. Consulta express" icon="content-cut" />
           </Field>
         ) : null}
-        <View style={styles.twoColumns}>
-          <Field label="Duración (min)">
-            <Input value={duration} onChangeText={setDuration} keyboardType="numeric" />
-          </Field>
-          <Field label="Precio">
-            <Input value={price} onChangeText={setPrice} keyboardType="decimal-pad" />
-          </Field>
-        </View>
+        <DurationField value={duration} onChange={setDuration} />
+        <Field label="Precio">
+          <Input value={price} onChangeText={setPrice} keyboardType="decimal-pad" prefix="$" placeholder="0.00" />
+        </Field>
       </Card>
 
       <SectionTitle>Fecha, hora y responsable</SectionTitle>
       <Card>
-        <View style={styles.twoColumns}>
-          <Field label="Fecha (AAAA-MM-DD)">
-            <Input value={localDate} onChangeText={setLocalDate} placeholder="2026-11-18" keyboardType="numeric" />
-          </Field>
-          <Field label="Hora (HH:MM)">
-            <Input value={localTime} onChangeText={setLocalTime} placeholder="10:30" keyboardType="numeric" />
-          </Field>
-        </View>
+        <DateField value={localDate} onChange={setLocalDate} workDays={business?.workDays} allowPast={!isNew} />
+        <TimeField
+          value={localTime}
+          onChange={setLocalTime}
+          from={business?.openTime}
+          to={business?.closeTime}
+          day={localDate}
+          durationMin={duration}
+        />
         <SelectField
           label="Empleado"
           value={employeeId === NONE ? null : employeeId}
@@ -231,21 +235,37 @@ export default function AppointmentScreen() {
 
       <SectionTitle>Estado y notas</SectionTitle>
       <Card>
-        <SelectField
-          label="Estado"
-          value={status}
-          options={STATUSES.map((s) => ({ id: s.id, label: s.label }))}
-          onChange={(value) => setStatus(value as AppointmentStatus)}
-        />
+        <Field label="Estado">
+          <ChipGroup<AppointmentStatus>
+            value={status}
+            options={STATUSES.map((st) => ({
+              id: st.id,
+              label: st.label,
+              icon: STATUS_ICONS[st.id],
+              tone: statusTone(st.id),
+            }))}
+            onChange={setStatus}
+          />
+        </Field>
         {status === "completed" ? (
-          <SelectField label="Método de pago" value={paymentMethod} options={methodOptions} onChange={setPaymentMethod} />
+          <Field label="Método de pago">
+            <ChipGroup
+              value={paymentMethod}
+              options={methodOptions.map((m) => ({ ...m, icon: METHOD_ICONS[m.id] }))}
+              onChange={setPaymentMethod}
+            />
+          </Field>
         ) : null}
         <Field label="Notas">
-          <Input value={notes} onChangeText={setNotes} multiline placeholder="Detalles para el equipo" />
+          <Input value={notes} onChangeText={setNotes} multiline placeholder="Detalles para el equipo" icon="note-text-outline" />
         </Field>
-        <Row style={{ marginTop: 8 }}>
-          <Button title="Guardar cita" icon="content-save" onPress={() => save.mutate()} loading={save.isPending} />
-        </Row>
+        <Button
+          title={isNew ? "Agendar cita" : "Guardar cambios"}
+          icon="content-save"
+          onPress={() => save.mutate()}
+          loading={save.isPending}
+          style={{ marginTop: 8 }}
+        />
       </Card>
 
       {!isNew ? (

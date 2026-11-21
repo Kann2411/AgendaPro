@@ -12,6 +12,7 @@ import { invalidateAll, queryClient } from "@/state/query-client";
 import { qk } from "@/state/query-keys";
 import { Button, Card, EmptyState, Field, Input, PageTitle, Row, Screen, SectionTitle, Segmented, Sheet, Badge } from "@/ui/components";
 import { MultiSelectField, SelectField, ToggleRow, WeekdayPicker } from "@/ui/forms";
+import { DurationField, TimeInput } from "@/ui/pickers";
 import { useTheme } from "@/ui/theme";
 
 export default function SettingsScreen() {
@@ -215,12 +216,8 @@ export default function SettingsScreen() {
               <Input value={currency} onChangeText={setCurrency} />
             </Field>
             <View style={styles.twoColumns}>
-              <Field label="Apertura">
-                <Input value={openTime} onChangeText={setOpenTime} keyboardType="numeric" />
-              </Field>
-              <Field label="Cierre">
-                <Input value={closeTime} onChangeText={setCloseTime} keyboardType="numeric" />
-              </Field>
+              <TimeInput label="Apertura" value={openTime} onChange={setOpenTime} />
+              <TimeInput label="Cierre" value={closeTime} onChange={setCloseTime} />
             </View>
             <WeekdayPicker value={workDays} onChange={setWorkDays} />
             <MultiSelectField
@@ -338,10 +335,8 @@ export default function SettingsScreen() {
             <Field label="Precio">
               <Input value={servicePrice} onChangeText={setServicePrice} keyboardType="decimal-pad" />
             </Field>
-            <Field label="Duración (min)">
-              <Input value={serviceDuration} onChangeText={setServiceDuration} keyboardType="numeric" />
-            </Field>
           </View>
+          <DurationField value={Number(serviceDuration)} onChange={(n) => setServiceDuration(String(n))} />
           <ToggleRow label="Servicio activo" value={serviceActive} onChange={setServiceActive} />
           <Button title="Guardar servicio" onPress={() => saveServiceMutation.mutate()} loading={saveServiceMutation.isPending} />
         </ScrollView>
@@ -359,12 +354,8 @@ export default function SettingsScreen() {
             <Input value={employeePhone} onChangeText={setEmployeePhone} keyboardType="phone-pad" />
           </Field>
           <View style={styles.twoColumns}>
-            <Field label="Entrada">
-              <Input value={employeeStart} onChangeText={setEmployeeStart} keyboardType="numeric" />
-            </Field>
-            <Field label="Salida">
-              <Input value={employeeEnd} onChangeText={setEmployeeEnd} keyboardType="numeric" />
-            </Field>
+            <TimeInput label="Entrada" value={employeeStart} onChange={setEmployeeStart} />
+            <TimeInput label="Salida" value={employeeEnd} onChange={setEmployeeEnd} />
           </View>
           <WeekdayPicker value={employeeDays} onChange={setEmployeeDays} label="Días que trabaja" />
           <ToggleRow label="Empleado activo" value={employeeActive} onChange={setEmployeeActive} />

@@ -10,6 +10,7 @@ import { usePreferences } from "@/state/preferences";
 import { invalidateAll } from "@/state/query-client";
 import { Badge, Button, Card, EmptyState, Field, Input, LoadingState, PageTitle, Row, Screen, SectionTitle, Sheet, Stat } from "@/ui/components";
 import { SelectField } from "@/ui/forms";
+import { DateInput } from "@/ui/pickers";
 import { useTheme } from "@/ui/theme";
 
 const categoryOptions = EXPENSE_CATEGORIES.map((c) => ({ id: c, label: c }));
@@ -61,15 +62,11 @@ export default function FinanceScreen() {
 
       <Card style={styles.filters}>
         <View style={styles.twoColumns}>
-          <Field label="Desde">
-            <Input value={from} onChangeText={(v) => setFinanceRange(v, to)} keyboardType="numeric" />
-          </Field>
-          <Field label="Hasta">
-            <Input value={to} onChangeText={(v) => setFinanceRange(from, v)} keyboardType="numeric" />
-          </Field>
+          <DateInput label="Desde" value={from} onChange={(v) => setFinanceRange(v, to)} />
+          <DateInput label="Hasta" value={to} onChange={(v) => setFinanceRange(from, v)} />
         </View>
         <Field label="Servicio">
-          <Input value={service} onChangeText={setService} placeholder="Filtrar por servicio" />
+          <Input value={service} onChangeText={setService} placeholder="Filtrar por servicio" icon="magnify" />
         </Field>
         <SelectField
           label="Empleado"
@@ -165,11 +162,9 @@ export default function FinanceScreen() {
             <Input value={expenseDescription} onChangeText={setExpenseDescription} placeholder="Detalle del gasto" />
           </Field>
           <Field label="Monto">
-            <Input value={expenseAmount} onChangeText={setExpenseAmount} keyboardType="decimal-pad" placeholder="0.00" />
+            <Input value={expenseAmount} onChangeText={setExpenseAmount} keyboardType="decimal-pad" placeholder="0.00" prefix="$" />
           </Field>
-          <Field label="Fecha (AAAA-MM-DD)">
-            <Input value={expenseDate} onChangeText={setExpenseDate} keyboardType="numeric" />
-          </Field>
+          <DateInput label="Fecha" value={expenseDate} onChange={setExpenseDate} />
           <Button title="Guardar gasto" icon="check" onPress={() => addExpense.mutate()} loading={addExpense.isPending} />
         </ScrollView>
       </Sheet>

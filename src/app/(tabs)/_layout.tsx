@@ -1,5 +1,6 @@
 import { Tabs } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { haptic } from "@/ui/haptics";
 import { useTheme } from "@/ui/theme";
 
 const ICONS: Record<string, string> = {
@@ -22,8 +23,10 @@ export default function TabsLayout() {
   const theme = useTheme();
   return (
     <Tabs
+      screenListeners={{ tabPress: () => haptic.select() }}
       screenOptions={({ route }) => ({
         headerShown: false,
+        animation: "shift",
         tabBarActiveTintColor: theme.colors.primary,
         tabBarInactiveTintColor: theme.colors.faint,
         tabBarStyle: {

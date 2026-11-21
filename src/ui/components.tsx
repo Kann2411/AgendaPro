@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -16,6 +16,8 @@ import {
   type ViewStyle,
 } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import Animated, { FadeIn, SlideInDown } from "react-native-reanimated";
+import { PressableScale } from "./motion";
 import { useTheme, type Theme } from "./theme";
 
 type Variant = "primary" | "secondary" | "ghost" | "danger";
@@ -90,9 +92,9 @@ export function Card({
   const styles = makeStyles(theme);
   if (onPress) {
     return (
-      <Pressable onPress={onPress} style={({ pressed }) => [styles.card, pressed && styles.pressed, style]}>
+      <PressableScale onPress={onPress} scaleTo={0.985} style={[styles.card, style]}>
         {children}
-      </Pressable>
+      </PressableScale>
     );
   }
   return <View style={[styles.card, style]}>{children}</View>;
@@ -125,14 +127,14 @@ export function Button({
   }[variant];
   const fg = variant === "primary" || variant === "danger" ? theme.colors.primaryFg : theme.colors.text;
   return (
-    <Pressable
+    <PressableScale
       onPress={onPress}
       disabled={disabled || loading}
-      style={({ pressed }) => [
+      scaleTo={0.96}
+      style={[
         styles.button,
         { backgroundColor: bg, borderColor: variant === "secondary" ? theme.colors.line : "transparent" },
         disabled && styles.disabled,
-        pressed && styles.pressed,
         style,
       ]}
     >
@@ -144,7 +146,7 @@ export function Button({
           <RNText style={[styles.buttonText, { color: fg }]}>{title}</RNText>
         </>
       )}
-    </Pressable>
+    </PressableScale>
   );
 }
 
@@ -162,13 +164,9 @@ export function IconButton({
   const theme = useTheme();
   const styles = makeStyles(theme);
   return (
-    <Pressable
-      onPress={onPress}
-      hitSlop={8}
-      style={({ pressed }) => [styles.iconButton, pressed && { opacity: 0.6 }]}
-    >
+    <PressableScale onPress={onPress} hitSlop={8} scaleTo={0.85} style={styles.iconButton}>
       <MaterialCommunityIcons name={name as never} size={size} color={color ?? theme.colors.muted} />
-    </Pressable>
+    </PressableScale>
   );
 }
 
@@ -192,6 +190,8 @@ export function Input({
   multiline,
   secureTextEntry,
   editable = true,
+  icon,
+  prefix,
 }: {
   value: string;
   onChangeText: (value: string) => void;
@@ -200,21 +200,47 @@ export function Input({
   multiline?: boolean;
   secureTextEntry?: boolean;
   editable?: boolean;
+  /** Icono a la izquierda (MaterialCommunityIcons). */
+  icon?: string;
+  /** Texto fijo a la izquierda, p. ej. el símbolo de moneda. */
+  prefix?: string;
 }) {
   const theme = useTheme();
   const styles = makeStyles(theme);
+  const [focused, setFocused] = useState(false);
   return (
-    <RNTextInput
-      value={value}
-      onChangeText={onChangeText}
-      placeholder={placeholder}
-      placeholderTextColor={theme.colors.faint}
-      keyboardType={keyboardType}
-      multiline={multiline}
-      secureTextEntry={secureTextEntry}
-      editable={editable}
-      style={[styles.input, multiline && styles.inputMultiline, !editable && styles.inputDisabled]}
-    />
+    <View
+      style={[
+        styles.inputBox,
+        multiline && styles.inputMultiline,
+        focused && { borderColor: theme.colors.primary },
+      ]}
+    >
+      {icon ? (
+        <MaterialCommunityIcons
+          name={icon as never}
+          size={18}
+          color={focused ? theme.colors.primary : theme.colors.faint}
+          style={multiline ? { marginTop: 14 } : undefined}
+        />
+      ) : null}
+      {prefix ? <RNText style={styles.inputPrefix}>{prefix}</RNText> : null}
+      <RNTextInput
+        value={value}
+        onChangeText={onChangeText}
+        placeholder={placeholder}
+        placeholderTextColor={theme.colors.faint}
+        keyboardType={keyboardType}
+        multiline={multiline}
+        secureTextEntry={secureTextEntry}
+        editable={editable}
+        selectionColor={theme.colors.primary}
+        cursorColor={theme.colors.primary}
+        onFocus={() => setFocused(true)}
+        onBlur={() => setFocused(false)}
+        style={[styles.input, multiline && styles.inputTextMultiline, !editable && styles.inputDisabled]}
+      />
+    </View>
   );
 }
 
@@ -262,21 +288,18 @@ export function Segmented<T extends string>({
   return (
     <View style={styles.segmented}>
       {options.map((option) => (
-        <Pressable
+        <PressableScale
           key={option.id}
+          feedback="select"
           onPress={() => onChange(option.id)}
-          style={({ pressed }) => [
-            styles.segment,
-            value === option.id && { backgroundColor: theme.colors.primary },
-            pressed && { opacity: 0.8 },
-          ]}
+          style={[styles.segment, value === option.id && { backgroundColor: theme.colors.primary }]}
         >
           <RNText
             style={[styles.segmentText, { color: value === option.id ? theme.colors.primaryFg : theme.colors.muted }]}
           >
             {option.label}
           </RNText>
-        </Pressable>
+        </PressableScale>
       ))}
     </View>
   );
@@ -320,14 +343,15 @@ export function Sheet({
   const theme = useTheme();
   const styles = makeStyles(theme);
   return (
-    <RNModal visible={open} transparent animationType="slide" onRequestClose={onClose}>
-      <View style={styles.modalBackdrop}>
+    <RNModal visible={open} transparent animationType="fade" statusBarTranslucent onRequestClose={onClose}>
+      <Animated.View entering={FadeIn.duration(180)} style={styles.modalBackdrop}>
         <Pressable style={StyleSheet.absoluteFill} onPress={onClose} />
         <KeyboardAvoidingView
           behavior={Platform.OS === "ios" ? "padding" : undefined}
           style={styles.sheetWrapper}
         >
-          <View style={styles.sheet}>
+          <Animated.View entering={SlideInDown.springify().damping(20).stiffness(180)} style={styles.sheet}>
+            <View style={[styles.sheetHandle, { backgroundColor: theme.colors.line }]} />
             <View style={styles.sheetHeader}>
               <RNText style={styles.sheetTitle}>{title}</RNText>
               <IconButton name="close" onPress={onClose} />
@@ -335,9 +359,9 @@ export function Sheet({
             <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.sheetBody}>
               {children}
             </ScrollView>
-          </View>
+          </Animated.View>
         </KeyboardAvoidingView>
-      </View>
+      </Animated.View>
     </RNModal>
   );
 }
@@ -408,17 +432,21 @@ function makeStyles(theme: Theme) {
     field: { gap: 6, marginBottom: 12 },
     fieldLabel: { fontSize: 13, fontWeight: "600", color: theme.colors.muted },
     fieldHint: { fontSize: 12, color: theme.colors.faint },
-    input: {
-      minHeight: 46,
+    inputBox: {
+      minHeight: 48,
       borderRadius: theme.radius.md,
-      borderWidth: 1,
+      borderWidth: 1.5,
       borderColor: theme.colors.line,
       backgroundColor: theme.colors.surface,
       paddingHorizontal: 12,
-      color: theme.colors.text,
-      fontSize: 15,
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 8,
     },
-    inputMultiline: { minHeight: 90, textAlignVertical: "top", paddingTop: 12 },
+    input: { flex: 1, minHeight: 46, color: theme.colors.text, fontSize: 15, paddingVertical: 0 },
+    inputPrefix: { fontSize: 15, fontWeight: "700", color: theme.colors.muted },
+    inputMultiline: { minHeight: 96, alignItems: "flex-start" },
+    inputTextMultiline: { minHeight: 90, textAlignVertical: "top", paddingTop: 12 },
     inputDisabled: { color: theme.colors.faint },
     badge: { borderRadius: 999, paddingHorizontal: 10, paddingVertical: 4, alignSelf: "flex-start" },
     badgeText: { fontSize: 11, fontWeight: "700" },
@@ -444,12 +472,13 @@ function makeStyles(theme: Theme) {
       paddingBottom: 24,
       maxHeight: "90%",
     },
+    sheetHandle: { alignSelf: "center", width: 40, height: 4, borderRadius: 2, marginTop: 10 },
     sheetHeader: {
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "space-between",
       paddingHorizontal: 20,
-      paddingTop: 18,
+      paddingTop: 10,
       paddingBottom: 8,
     },
     sheetTitle: { fontSize: 20, fontWeight: "700", color: theme.colors.text },

@@ -2,6 +2,8 @@ import { useState } from "react";
 import { Pressable, StyleSheet, Switch, Text, View } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Field, Sheet } from "./components";
+import { haptic } from "./haptics";
+import { PressableScale } from "./motion";
 import { useTheme } from "./theme";
 
 export type Option<T extends string = string> = {
@@ -31,25 +33,23 @@ export function SelectField<T extends string>({
   return (
     <>
       <Field label={label} hint={hint}>
-        <Pressable
+        <PressableScale
           onPress={() => setOpen(true)}
-          style={({ pressed }) => [
-            styles.control,
-            { borderColor: theme.colors.line, backgroundColor: theme.colors.surface },
-            pressed && { opacity: 0.7 },
-          ]}
+          scaleTo={0.98}
+          style={[styles.control, { borderColor: theme.colors.line, backgroundColor: theme.colors.surface }]}
         >
           <Text style={[styles.controlText, { color: selected ? theme.colors.text : theme.colors.faint }]}>
             {selected?.label ?? placeholder}
           </Text>
           <MaterialCommunityIcons name="chevron-down" size={18} color={theme.colors.muted} />
-        </Pressable>
+        </PressableScale>
       </Field>
       <Sheet open={open} onClose={() => setOpen(false)} title={label}>
         {options.map((option) => (
           <Pressable
             key={option.id}
             onPress={() => {
+              haptic.select();
               onChange(option.id);
               setOpen(false);
             }}
@@ -88,19 +88,16 @@ export function MultiSelectField({
   return (
     <>
       <Field label={label} hint={hint}>
-        <Pressable
+        <PressableScale
           onPress={() => setOpen(true)}
-          style={({ pressed }) => [
-            styles.control,
-            { borderColor: theme.colors.line, backgroundColor: theme.colors.surface },
-            pressed && { opacity: 0.7 },
-          ]}
+          scaleTo={0.98}
+          style={[styles.control, { borderColor: theme.colors.line, backgroundColor: theme.colors.surface }]}
         >
           <Text style={[styles.controlText, { color: summary ? theme.colors.text : theme.colors.faint }]} numberOfLines={2}>
             {summary || "Ninguno"}
           </Text>
           <MaterialCommunityIcons name="chevron-down" size={18} color={theme.colors.muted} />
-        </Pressable>
+        </PressableScale>
       </Field>
       <Sheet open={open} onClose={() => setOpen(false)} title={label}>
         {options.map((option) => {
@@ -108,9 +105,10 @@ export function MultiSelectField({
           return (
             <Pressable
               key={option.id}
-              onPress={() =>
-                onChange(checked ? values.filter((v) => v !== option.id) : [...values, option.id])
-              }
+              onPress={() => {
+                haptic.select();
+                onChange(checked ? values.filter((v) => v !== option.id) : [...values, option.id]);
+              }}
               style={({ pressed }) => [styles.option, { borderBottomColor: theme.colors.divider }, pressed && { opacity: 0.6 }]}
             >
               <Text style={[styles.optionLabel, { color: theme.colors.text, flex: 1 }]}>{option.label}</Text>
@@ -170,16 +168,14 @@ export function WeekdayPicker({
 function WeekChip({ label, active, onPress }: { label: string; active: boolean; onPress: () => void }) {
   const theme = useTheme();
   return (
-    <Pressable
+    <PressableScale
       onPress={onPress}
-      style={({ pressed }) => [
-        styles.weekChip,
-        { backgroundColor: active ? theme.colors.primary : theme.colors.sunken },
-        pressed && { opacity: 0.7 },
-      ]}
+      feedback="select"
+      scaleTo={0.9}
+      style={[styles.weekChip, { backgroundColor: active ? theme.colors.primary : theme.colors.sunken }]}
     >
       <Text style={[styles.weekChipText, { color: active ? theme.colors.primaryFg : theme.colors.muted }]}>{label}</Text>
-    </Pressable>
+    </PressableScale>
   );
 }
 
@@ -203,7 +199,10 @@ export function ToggleRow({
       </View>
       <Switch
         value={value}
-        onValueChange={onChange}
+        onValueChange={(v) => {
+          haptic.select();
+          onChange(v);
+        }}
         trackColor={{ false: theme.colors.line, true: theme.colors.primary }}
         thumbColor={theme.colors.surface}
       />
@@ -215,7 +214,7 @@ const styles = StyleSheet.create({
   control: {
     minHeight: 46,
     borderRadius: 12,
-    borderWidth: 1,
+    borderWidth: 1.5,
     paddingHorizontal: 12,
     flexDirection: "row",
     alignItems: "center",
