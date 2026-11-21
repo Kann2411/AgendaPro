@@ -5,6 +5,7 @@ import RNDateTimePicker, { DateTimePickerAndroid } from "@react-native-community
 import Animated, { FadeIn, FadeOut, LinearTransition } from "react-native-reanimated";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
+import { formatDuration } from "@/domain/format";
 import { addDays, addMinutes, formatLongDay, formatTime, isoToday, minutes, parseDay, timeNow } from "@/domain/time";
 import { Button, Sheet } from "./components";
 import { haptic } from "./haptics";
@@ -22,13 +23,6 @@ function hhmmToDate(hhmm: string): Date {
   return d;
 }
 
-export function formatDuration(min: number): string {
-  if (!Number.isFinite(min) || min <= 0) return "—";
-  const h = Math.floor(min / 60);
-  const m = min % 60;
-  if (!h) return `${m} min`;
-  return m ? `${h} h ${m} min` : `${h} h`;
-}
 
 type NativeMode = "date" | "time";
 

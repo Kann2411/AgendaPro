@@ -13,6 +13,8 @@ import { qk } from "@/state/query-keys";
 import { Button, Card, EmptyState, Field, Input, PageTitle, Row, Screen, SectionTitle, Segmented, Sheet, Badge } from "@/ui/components";
 import { MultiSelectField, SelectField, ToggleRow, WeekdayPicker } from "@/ui/forms";
 import { DurationField, TimeInput } from "@/ui/pickers";
+import { BackupCard } from "@/features/settings/BackupCard";
+import { RemindersCard } from "@/features/settings/RemindersCard";
 import { useTheme } from "@/ui/theme";
 
 export default function SettingsScreen() {
@@ -228,6 +230,10 @@ export default function SettingsScreen() {
             />
             <Button title="Guardar cambios" icon="content-save" onPress={() => saveBusinessMutation.mutate()} loading={saveBusinessMutation.isPending} />
           </Card>
+          <SectionTitle>Recordatorios</SectionTitle>
+          <RemindersCard />
+          <SectionTitle>Respaldo</SectionTitle>
+          <BackupCard />
           <SectionTitle>Datos y sincronización</SectionTitle>
           <Card>
             <Row style={styles.infoRow}>

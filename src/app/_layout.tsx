@@ -7,9 +7,13 @@ import * as SystemUI from "expo-system-ui";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { getDb } from "@/data/db/database";
+import { configureNotifications, requestReminderPermission, syncReminders, useNotificationNavigation } from "@/services/reminders";
+import { usePreferences } from "@/state/preferences";
 import { queryClient } from "@/state/query-client";
 import { useBusiness } from "@/state/hooks";
 import { ThemeContext, themeFromBusiness, useTheme } from "@/ui/theme";
+
+configureNotifications();
 
 function Providers({ children }: { children: React.ReactNode }) {
   const { data: business } = useBusiness();
@@ -19,6 +23,18 @@ function Providers({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     void getDb();
   }, []);
+
+  // Con el negocio configurado: pide permiso de notificaciones (una vez) y
+  // reprograma recordatorios cuando cambian las preferencias.
+  const hasBusiness = !!business;
+  const { remindersEnabled, reminderMinutes, dailySummary } = usePreferences();
+  useEffect(() => {
+    if (!hasBusiness) return;
+    void (async () => {
+      if (remindersEnabled || dailySummary) await requestReminderPermission().catch(() => false);
+      await syncReminders().catch(() => 0);
+    })();
+  }, [hasBusiness, remindersEnabled, reminderMinutes, dailySummary]);
 
   useEffect(() => {
     void SystemUI.setBackgroundColorAsync(theme.colors.background);
@@ -34,6 +50,7 @@ function Providers({ children }: { children: React.ReactNode }) {
 
 function ThemedStack() {
   const theme = useTheme();
+  useNotificationNavigation();
   return (
     <Stack
       screenOptions={{

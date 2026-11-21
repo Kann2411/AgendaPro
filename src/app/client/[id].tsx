@@ -14,6 +14,8 @@ import { errorText, money, statusLabel, statusTone } from "@/domain/format";
 import { useBusiness, useClient } from "@/state/hooks";
 import { invalidateAll } from "@/state/query-client";
 import { Badge, Button, Card, EmptyState, Field, Input, LoadingState, PageTitle, Row, Screen, SectionTitle, Sheet } from "@/ui/components";
+import { ContactActions } from "@/features/contact/ContactActions";
+import { clientMessages } from "@/services/contact";
 import { useTheme } from "@/ui/theme";
 
 export default function ClientScreen() {
@@ -152,6 +154,7 @@ export default function ClientScreen() {
         subtitle={client.phone || "Sin teléfono"}
         action={<Button title="Editar" variant="secondary" icon="pencil" onPress={startEdit} />}
       />
+      <ContactActions phone={client.phone} locale={business?.locale} messages={clientMessages(client.fullName, business)} />
 
       <View style={styles.statsGrid}>
         <Card style={styles.statCard}>

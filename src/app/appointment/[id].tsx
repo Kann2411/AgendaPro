@@ -14,6 +14,8 @@ import { useBusiness, useClients, useEmployees, useServices } from "@/state/hook
 import { invalidateAll } from "@/state/query-client";
 import { Button, Card, Field, Input, LoadingState, PageTitle, Screen, SectionTitle } from "@/ui/components";
 import { SelectField, ToggleRow } from "@/ui/forms";
+import { ContactActions } from "@/features/contact/ContactActions";
+import { appointmentMessages } from "@/services/contact";
 import { haptic } from "@/ui/haptics";
 import { METHOD_ICONS, STATUS_ICONS } from "@/ui/icons";
 import { ChipGroup, DateField, DurationField, TimeField } from "@/ui/pickers";
@@ -155,6 +157,23 @@ export default function AppointmentScreen() {
   return (
     <Screen>
       <PageTitle title={isNew ? "Nueva cita" : "Editar cita"} subtitle={isNew ? "Completa los datos para agendar." : `Estado actual: ${statusLabel(status)}`} />
+      {!isNew ? (
+        <ContactActions
+          phone={clientPhone}
+          locale={business?.locale}
+          messages={appointmentMessages(
+            {
+              clientName: manualClient,
+              petName,
+              serviceName: manualService || services.find((s) => s.id === serviceId)?.name || "",
+              employeeName: employees.find((e) => e.id === employeeId)?.name ?? "",
+              localDate,
+              localTime,
+            },
+            business,
+          )}
+        />
+      ) : null}
 
       <SectionTitle>Cliente y servicio</SectionTitle>
       <Card>

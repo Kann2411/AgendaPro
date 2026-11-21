@@ -14,6 +14,8 @@ import { usePreferences } from "@/state/preferences";
 import { invalidateAll } from "@/state/query-client";
 import { Badge, Button, Card, EmptyState, LoadingState, PageTitle, Row, Screen, SectionTitle, Segmented } from "@/ui/components";
 import { SelectField } from "@/ui/forms";
+import { useQuickActions } from "@/features/quick-actions";
+import { Fab } from "@/ui/Fab";
 import { useTheme } from "@/ui/theme";
 
 type AgendaView = "day" | "week" | "month";
@@ -21,6 +23,7 @@ type AgendaView = "day" | "week" | "month";
 export default function AgendaScreen() {
   const theme = useTheme();
   const router = useRouter();
+  const quickActions = useQuickActions();
   const now = useNow();
   const business = useBusiness().data;
   const employees = useEmployees().data ?? [];
@@ -95,11 +98,10 @@ export default function AgendaScreen() {
   const selectedCount = byDay.get(day)?.length ?? 0;
 
   return (
-    <Screen refreshing={isRefetching} onRefresh={() => void refetch()}>
+    <Screen refreshing={isRefetching} onRefresh={() => void refetch()} overlay={<Fab actions={quickActions} />}>
       <PageTitle
         title="Agenda"
         subtitle={formatDay(day, "EEEE d 'de' MMMM")}
-        action={<Button title="Nueva cita" icon="plus" onPress={() => router.push({ pathname: "/appointment/[id]", params: { id: "new" } })} />}
       />
 
       <Segmented

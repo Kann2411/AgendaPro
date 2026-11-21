@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { Alert, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useMutation } from "@tanstack/react-query";
 import { saveExpense } from "@/data/repositories/finance-repository";
@@ -24,6 +25,14 @@ export default function FinanceScreen() {
   const [employeeId, setEmployeeId] = useState("");
   const [method, setMethod] = useState("");
   const [expenseOpen, setExpenseOpen] = useState(false);
+  // Abre "Registrar gasto" cuando se llega desde el botón flotante (?gasto=1).
+  const router = useRouter();
+  const { gasto } = useLocalSearchParams<{ gasto?: string }>();
+  const showExpense = expenseOpen || gasto === "1";
+  function closeExpense() {
+    setExpenseOpen(false);
+    if (gasto) router.setParams({ gasto: undefined });
+  }
   const [expenseCategory, setExpenseCategory] = useState<(typeof EXPENSE_CATEGORIES)[number]>(EXPENSE_CATEGORIES[0]);
   const [expenseDescription, setExpenseDescription] = useState("");
   const [expenseAmount, setExpenseAmount] = useState("");
@@ -41,7 +50,7 @@ export default function FinanceScreen() {
     },
     onSuccess: async () => {
       await invalidateAll();
-      setExpenseOpen(false);
+      closeExpense();
       setExpenseAmount("");
       setExpenseDescription("");
     },
@@ -155,7 +164,7 @@ export default function FinanceScreen() {
         </>
       ) : null}
 
-      <Sheet open={expenseOpen} onClose={() => setExpenseOpen(false)} title="Registrar gasto">
+      <Sheet open={showExpense} onClose={() => closeExpense()} title="Registrar gasto">
         <ScrollView contentContainerStyle={styles.sheetContent}>
           <SelectField label="Categoría" value={expenseCategory} options={categoryOptions} onChange={setExpenseCategory} />
           <Field label="Descripción">

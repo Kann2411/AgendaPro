@@ -11,10 +11,17 @@ type Preferences = {
   employeeFilter: string;
   financeFrom: string | null;
   financeTo: string | null;
+  /** Recordatorio local antes de cada cita. */
+  remindersEnabled: boolean;
+  /** Minutos de anticipación del recordatorio. */
+  reminderMinutes: number;
+  /** Aviso diario al abrir el negocio. */
+  dailySummary: boolean;
   setDayCursor: (day: string | null) => void;
   setAgendaView: (view: AgendaView) => void;
   setEmployeeFilter: (id: string) => void;
   setFinanceRange: (from: string, to: string) => void;
+  setReminders: (patch: Partial<Pick<Preferences, "remindersEnabled" | "reminderMinutes" | "dailySummary">>) => void;
 };
 
 const kvStorage = {
@@ -31,10 +38,14 @@ export const usePreferences = create<Preferences>()(
       employeeFilter: "",
       financeFrom: null,
       financeTo: null,
+      remindersEnabled: true,
+      reminderMinutes: 60,
+      dailySummary: true,
       setDayCursor: (dayCursor) => set({ dayCursor }),
       setAgendaView: (agendaView) => set({ agendaView }),
       setEmployeeFilter: (employeeFilter) => set({ employeeFilter }),
       setFinanceRange: (financeFrom, financeTo) => set({ financeFrom, financeTo }),
+      setReminders: (patch) => set(patch),
     }),
     {
       name: "agendapro.preferences",
@@ -45,6 +56,9 @@ export const usePreferences = create<Preferences>()(
         employeeFilter: state.employeeFilter,
         financeFrom: state.financeFrom,
         financeTo: state.financeTo,
+        remindersEnabled: state.remindersEnabled,
+        reminderMinutes: state.reminderMinutes,
+        dailySummary: state.dailySummary,
       }),
     },
   ),

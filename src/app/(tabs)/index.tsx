@@ -5,11 +5,14 @@ import { formatLongDay, formatTime } from "@/domain/time";
 import { money, statusLabel, statusTone } from "@/domain/format";
 import { useBusiness, useDashboard, useNow } from "@/state/hooks";
 import { Badge, Button, Card, EmptyState, LoadingState, PageTitle, Row, Screen, SectionTitle, Stat } from "@/ui/components";
+import { useQuickActions } from "@/features/quick-actions";
+import { Fab } from "@/ui/Fab";
 import { useTheme } from "@/ui/theme";
 
 export default function DashboardScreen() {
   const theme = useTheme();
   const router = useRouter();
+  const quickActions = useQuickActions();
   const now = useNow();
   const { data: business } = useBusiness();
   const { data: dashboard, isLoading, refetch, isRefetching } = useDashboard(now.day);
@@ -20,7 +23,7 @@ export default function DashboardScreen() {
   const firstName = (business?.name ?? "tu negocio").split(" ")[0];
 
   return (
-    <Screen refreshing={isRefetching} onRefresh={() => void refetch()}>
+    <Screen refreshing={isRefetching} onRefresh={() => void refetch()} overlay={<Fab actions={quickActions} />}>
       <PageTitle
         title={`Hola, ${firstName}`}
         subtitle={formatLongDay(dashboard.day)}

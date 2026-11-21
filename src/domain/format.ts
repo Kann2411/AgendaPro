@@ -58,3 +58,12 @@ export function errorText(e: unknown): string {
   if (e instanceof Error && e.message) return e.message;
   return "No se pudo completar la acción";
 }
+
+/** "45 min", "1 h", "1 h 30 min". */
+export function formatDuration(min: number): string {
+  if (!Number.isFinite(min) || min <= 0) return "—";
+  const h = Math.floor(min / 60);
+  const m = min % 60;
+  if (!h) return `${m} min`;
+  return m ? `${h} h ${m} min` : `${h} h`;
+}

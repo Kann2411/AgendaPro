@@ -50,7 +50,35 @@ export function getDb(): Promise<SQLite.SQLiteDatabase> {
   return dbPromise;
 }
 
+/**
+ * Cierra la conexión actual y abre una nueva (vuelve a correr migraciones).
+ * Se usa después de restaurar un respaldo.
+ */
+export async function reopenDb(): Promise<SQLite.SQLiteDatabase> {
+  const current = dbPromise;
+  dbPromise = null;
+  if (current) {
+    const db = await current.catch(() => null);
+    await db?.closeAsync().catch(() => undefined);
+  }
+  return getDb();
+}
+
 export type Db = Awaited<ReturnType<typeof getDb>>;
+
+export async function getMeta(key: string): Promise<string | null> {
+  const db = await getDb();
+  const row = await db.getFirstAsync<{ value: string }>("SELECT value FROM meta WHERE key = ?", [key]);
+  return row?.value ?? null;
+}
+
+export async function setMeta(key: string, value: string): Promise<void> {
+  const db = await getDb();
+  await db.runAsync(
+    "INSERT INTO meta (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value",
+    [key, value],
+  );
+}
 
 export async function nowIso(): Promise<string> {
   return new Date().toISOString();

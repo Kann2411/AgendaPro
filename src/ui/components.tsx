@@ -27,11 +27,14 @@ export function Screen({
   refreshing,
   onRefresh,
   scroll = true,
+  overlay,
 }: {
   children: ReactNode;
   refreshing?: boolean;
   onRefresh?: () => void;
   scroll?: boolean;
+  /** Elementos flotantes sobre el contenido (p. ej. el FAB). */
+  overlay?: ReactNode;
 }) {
   const theme = useTheme();
   const styles = makeStyles(theme);
@@ -40,7 +43,7 @@ export function Screen({
     <View style={styles.screen}>
       {scroll ? (
         <ScrollView
-          contentContainerStyle={styles.scrollContent}
+          contentContainerStyle={[styles.scrollContent, overlay ? { paddingBottom: 110 } : null]}
           keyboardShouldPersistTaps="handled"
           refreshControl={
             onRefresh ? (
@@ -53,6 +56,7 @@ export function Screen({
       ) : (
         content
       )}
+      {overlay}
     </View>
   );
 }
